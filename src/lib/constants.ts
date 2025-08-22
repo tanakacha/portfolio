@@ -1,19 +1,3 @@
-export const DESIGN_TOKENS = {
-  // ヘッダー＆ブランディング
-  brandTitle: "text-mypalette-pink",            // ブランドタイトル（ピンク）
-  brandTitleHover: "hover:text-mypalette-navy", // ブランドタイトルホバー（紺）
-  
-  // ナビゲーション状態
-  navigationActive: "text-mypalette-navy",      // アクティブなナビ項目（紺）
-  navigationDefault: "text-mypalette-gray",     // デフォルトナビ項目（グレー）
-  navigationHover: "hover:text-mypalette-sky",  // ナビホバー効果（水色）
-  
-  // テーマカラー
-  primaryText: "text-mypalette-navy",           // メインテキスト（紺）
-  accentText: "text-mypalette-pink",            // アクセントテキスト（ピンク）
-  highlightText: "text-mypalette-lime"          // ハイライトテキスト（ライムグリーン）
-} as const;
-
 // カラーパレット定義（16進数値）
 export const COLOR_PALETTE = {
   hex: {
@@ -27,3 +11,10 @@ export const COLOR_PALETTE = {
     text: '#192138',       // テキスト（ダークネイビー）
   }
 } as const;
+
+// ナビゲーションアイテム
+export const NAVIGATION_ITEMS = [
+  { id: "top", label: "Top", href: "#top" },
+  { id: "works", label: "Works", href: "#works" },
+  { id: "history", label: "History", href: "#history" }
+] as const;
