@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.gradient-border {
+  position: relative;
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 2px; /* 枠の太さ */
+  background: radial-gradient(circle, #F3B6B4 60%, rgba(243,182,180,0) 100%);
+}
+.gradient-border > .tag-inner {
+  border-radius: 9999px;
+  background: transparent;
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  color: #192138;
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 1;
+}
