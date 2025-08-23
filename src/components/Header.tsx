@@ -38,6 +38,16 @@ export default function Header() {
                   onMouseLeave={(e) => {
                     e.currentTarget.style.color = COLOR_PALETTE.hex.text;
                   }}
+                  onClick={() => {
+                    if (item.href === '#top') {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                      const section = document.querySelector(item.href);
+                      if (section) {
+                        section.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }
+                  }}
                 >
                   {item.label}
                 </li>
@@ -100,7 +110,18 @@ export default function Header() {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = COLOR_PALETTE.hex.text;
                 }}
-                onClick={() => setIsOpen(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  if (item.href === '#top') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else {
+                    const section = document.querySelector(item.href);
+                    if (section) {
+                      section.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }}
               >
                 {item.label}
               </a>
