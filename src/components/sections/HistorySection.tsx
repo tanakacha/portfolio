@@ -1,12 +1,12 @@
 import { history } from '@/content/history';
-import { COLOR_PALETTE } from '@/lib/constants';
+import { CURRENT_THEME } from '@/lib/constants';
 
 export default function HistorySection() {
   return (
     <section
       id='history'
       className='py-16'
-      style={{ backgroundColor: COLOR_PALETTE.hex.white }}
+      style={{ backgroundColor: CURRENT_THEME.background }}
     >
       <div className='max-w-6xl mx-auto px-4'>
         <h2
@@ -19,7 +19,7 @@ export default function HistorySection() {
           {/* 全体 */}
           <div
             className='absolute left-16 top-0 bottom-0 w-0.5'
-            style={{ backgroundColor: COLOR_PALETTE.hex.sky, height: '100%'}}
+            style={{ backgroundColor: CURRENT_THEME.border, height: '100%'}}
           >
           </div>
           {history.map(item => (
@@ -28,7 +28,7 @@ export default function HistorySection() {
               <div className='w-16 flex-shrink-0 pt-3'>
                 <p
                   className='text-xs'
-                  style={{ color: COLOR_PALETTE.hex.gray}}
+                  style={{ color: CURRENT_THEME.textSecondary}}
                 >
                   {item.date}
                 </p>
@@ -40,20 +40,20 @@ export default function HistorySection() {
                 <div
                   className='absolute w-2 h-2 rounded-full top-4 z-10'
                   style={{
-                    backgroundColor: COLOR_PALETTE.hex.sky,
+                    backgroundColor: CURRENT_THEME.border,
                     left: '-3px'
                   }}
                 ></div>
 
                 <h3
                   className='text-base font-semibold mb-1'
-                  style={{ color: COLOR_PALETTE.hex.text }}
+                  style={{ color: CURRENT_THEME.text }}
                 >
                   {item.title}
                 </h3>
                 <p
                   className='text-sm'
-                  style={{ color: COLOR_PALETTE.hex.text }}
+                  style={{ color: CURRENT_THEME.text }}
                 >
                   {item.description}
                 </p>
@@ -67,7 +67,7 @@ export default function HistorySection() {
           {/* 全体 */}
           <div
             className='absolute left-28 top-0 bottom-0 w-0.5'
-            style={{ backgroundColor: COLOR_PALETTE.hex.sky, height: '100%' }}
+            style={{ backgroundColor: CURRENT_THEME.border, height: '100%' }}
           ></div>
 
           {history.map(item => (
@@ -76,7 +76,7 @@ export default function HistorySection() {
               <div className='w-28 flex-shrink-0 pt-5'>
                 <p
                   className='text-sm font-medium'
-                  style={{ color: COLOR_PALETTE.hex.gray }}
+                  style={{ color: CURRENT_THEME.textSecondary }}
                 >
                   {item.date}
                 </p>
@@ -89,19 +89,19 @@ export default function HistorySection() {
                 <div
                   className='absolute w-3 h-3 rounded-full top-6 z-10'
                   style={{ 
-                    backgroundColor: COLOR_PALETTE.hex.sky,
+                    backgroundColor: CURRENT_THEME.border,
                     left: '-5px'
                   }}
                 ></div>
 
                 <h3
                   className='text-lg font-semibold mb-2'
-                  style={{ color: COLOR_PALETTE.hex.text }}
+                  style={{ color: CURRENT_THEME.text }}
                 >
                   {item.title}
                 </h3>
                 <p className='text-sm'
-                  style={{ color: COLOR_PALETTE.hex.text }}
+                  style={{ color: CURRENT_THEME.text }}
                 >
                   {item.description}
                 </p>

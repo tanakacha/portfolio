@@ -2,7 +2,7 @@
 
 import { works } from '@/content/works';
 import Image from 'next/image';
-import { COLOR_PALETTE } from '@/lib/constants';
+import { CURRENT_THEME } from '@/lib/constants';
 import { useState } from 'react';
 
 // アイコンのマッピング
@@ -50,7 +50,7 @@ const ImageWithLinks = ({ src, alt, links }: { src: string, alt: string, links?:
       width={400}
       height={200}
       className="rounded object-cover"
-      style={{ borderColor: COLOR_PALETTE.hex.pink }}
+      style={{ borderColor: CURRENT_THEME.border }}
     />
   </div>
 );
@@ -69,12 +69,12 @@ export default function WorksSection() {
     <section
       id='works'
       className='py-16'
-      style={{ backgroundColor: COLOR_PALETTE.hex.white }}
+      style={{ backgroundColor: CURRENT_THEME.background }}
     >
       <div className='max-w-6xl mx-auto px-4'>
         <h2
           className='text-2xl font-bold mb-8'
-          style={{ color: COLOR_PALETTE.hex.text }}
+          style={{ color: CURRENT_THEME.text }}
         >
           Works
         </h2>
@@ -92,15 +92,15 @@ export default function WorksSection() {
                 key={work.id}
                 className='flex flex-col md:flex-row items-center border-2 rounded-lg p-6 shadow'
                 style={{
-                  borderColor: COLOR_PALETTE.hex.lime,
-                  backgroundColor: COLOR_PALETTE.hex.white
+                  borderColor: CURRENT_THEME.border,
+                  backgroundColor: CURRENT_THEME.background
                 }}
               >
                 {/* 左半分: タイトル+画像+説明（PC:タイトル+説明, モバイル:タイトル→画像→説明） */}
                 <div className='w-full md:w-1/2 flex flex-col md:justify-start md:items-start md:self-start'>
                   <h3 
                     className='text-lg font-semibold mb-2 order-1'
-                    style={{ color: COLOR_PALETTE.hex.text }}
+                    style={{ color: CURRENT_THEME.text }}
                   >
                     {work.title}
                   </h3>
@@ -123,7 +123,7 @@ export default function WorksSection() {
                   </div>
                   <div
                     className='text-sm order-3 md:order-1 md:pr-8'
-                    style={{ color: COLOR_PALETTE.hex.text }}
+                    style={{ color: CURRENT_THEME.text }}
                   >
                     {work.description.map((line, index) => (
                       <div key={index}>

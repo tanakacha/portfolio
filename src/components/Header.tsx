@@ -1,6 +1,6 @@
 'use client';
 
-import { COLOR_PALETTE, NAVIGATION_ITEMS } from "@/lib/constants";
+import { CURRENT_THEME, NAVIGATION_ITEMS } from "@/lib/constants";
 import { useState } from 'react';
 
 export default function Header() {
@@ -9,18 +9,18 @@ export default function Header() {
   return (
     <header 
       className="fixed top-0 left-0 w-full shadow-sm z-50"
-      style={{ backgroundColor: COLOR_PALETTE.hex.white }}
+      style={{ backgroundColor: CURRENT_THEME.background }}
     >
       <div className="max-w-6xl mx-auto px-4 py-4">
         <nav className="flex justify-between items-center">
           <div 
             className="text-xl font-bold cursor-pointer transition-colors"
-            style={{ color: COLOR_PALETTE.hex.text }}
+            style={{ color: CURRENT_THEME.text }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = COLOR_PALETTE.hex.navy;
+              e.currentTarget.style.color = CURRENT_THEME.textSecondary;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = COLOR_PALETTE.hex.text;
+              e.currentTarget.style.color = CURRENT_THEME.text;
             }}
           >
             田中智彩
@@ -31,12 +31,12 @@ export default function Header() {
                 <li 
                   key={item.id}
                   className="font-medium cursor-pointer transition-colors"
-                  style={{ color: COLOR_PALETTE.hex.text }}
+                  style={{ color: CURRENT_THEME.text }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = COLOR_PALETTE.hex.gray;
+                    e.currentTarget.style.color = CURRENT_THEME.textSecondary;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = COLOR_PALETTE.hex.text;
+                    e.currentTarget.style.color = CURRENT_THEME.text;
                   }}
                   onClick={() => {
                     if (item.href === '#top') {
@@ -56,12 +56,12 @@ export default function Header() {
             {/* モバイル用ハンバーガーメニューボタン */}
             <button
               className="md:hidden text-xl transition-colors"
-              style={{ color: COLOR_PALETTE.hex.text }}
+              style={{ color: CURRENT_THEME.text }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = COLOR_PALETTE.hex.gray;
+                e.currentTarget.style.color = CURRENT_THEME.textSecondary;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = COLOR_PALETTE.hex.text;
+                e.currentTarget.style.color = CURRENT_THEME.text;
               }}
               onClick={() => setIsOpen(!isOpen)}
             >
@@ -77,18 +77,18 @@ export default function Header() {
             ? 'opacity-100 visible' 
             : 'opacity-0 invisible'
         }`}
-        style={{ backgroundColor: COLOR_PALETTE.hex.white }}
+        style={{ backgroundColor: CURRENT_THEME.background }}
       >
           <div className="max-w-6xl mx-auto px-4 py-4">
             <div className="flex justify-end">
               <button
                 className="text-2xl transition-colors"
-                style={{ color: COLOR_PALETTE.hex.text }}
+                style={{ color: CURRENT_THEME.text }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = COLOR_PALETTE.hex.gray;
+                  e.currentTarget.style.color = CURRENT_THEME.textSecondary;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = COLOR_PALETTE.hex.text;
+                  e.currentTarget.style.color = CURRENT_THEME.text;
                 }}
                 onClick={() => setIsOpen(false)}
               >
@@ -103,12 +103,12 @@ export default function Header() {
                 key={item.id}
                 href={item.href}
                 className="text-2xl font-medium transition-colors"
-                style={{ color: COLOR_PALETTE.hex.text }}
+                style={{ color: CURRENT_THEME.text }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = COLOR_PALETTE.hex.sky;
+                  e.currentTarget.style.color = CURRENT_THEME.textSecondary;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = COLOR_PALETTE.hex.text;
+                  e.currentTarget.style.color = CURRENT_THEME.text;
                 }}
                 onClick={(e) => {
                   e.preventDefault();
