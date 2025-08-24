@@ -19,6 +19,9 @@ export const THEME_COLORS = {
   },
 } as const;
 
+// 現在のテーマ
+export const CURRENT_THEME = THEME_COLORS.default;
+
 // ナビゲーションアイテム
 export const NAVIGATION_ITEMS = [
   { id: "top", label: "Top", href: "#top" },
