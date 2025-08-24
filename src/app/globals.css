@@ -42,3 +42,24 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* WorksSectionのカード下線アニメーション */
+.work-card {
+  position: relative;
+  overflow: hidden;
+}
+.work-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background: #A5DBC0; /* COLOR_PALETTE.hex.lime */
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  transform-origin: left;
+}
+.work-card.open::after {
+  transform: scaleX(1);
+}
