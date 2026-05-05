@@ -48,6 +48,18 @@ export default async function LoginPage({
               パスワードが違います
             </p>
           )}
+          <p
+            className="text-xs leading-relaxed"
+            style={{ color: CURRENT_THEME.textSecondary }}
+          >
+            ヒント: 好きな短歌の初句（ローマ字）+ 大量に作りたいお菓子(英語)
+          </p>
+          <p
+            className="text-xs leading-relaxed"
+            style={{ color: CURRENT_THEME.textSecondary }}
+          >
+            知り合いの方へ: 顔写真が検索で引っかからないようにしたいだけなので、いつでも連絡ください
+          </p>
           <button
             type="submit"
             className="rounded px-4 py-2 font-medium transition-opacity hover:opacity-80"
