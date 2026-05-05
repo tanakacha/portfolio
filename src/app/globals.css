@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.gradient-border {
+  position: relative;
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 2px; /* 枠の太さ */
+  background: radial-gradient(circle, #F3B6B4 60%, rgba(243,182,180,0) 100%);
+}
+.gradient-border > .tag-inner {
+  border-radius: 9999px;
+  background: transparent;
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  color: #192138;
+  font-size: 0.875rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* WorksSectionのカード下線アニメーション */
+.work-card {
+  position: relative;
+  overflow: hidden;
+}
+.work-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background: #A5DBC0; /* COLOR_PALETTE.hex.lime */
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  transform-origin: left;
+}
+.work-card.open::after {
+  transform: scaleX(1);
+}
