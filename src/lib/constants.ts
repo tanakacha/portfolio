@@ -22,6 +22,9 @@ export const THEME_COLORS = {
 // 現在のテーマ
 export const CURRENT_THEME = THEME_COLORS.default;
 
+// 本番サイト URL (metadata / OG / sitemap で使用)
+export const SITE_URL = "https://portfolio-pearl-five-82.vercel.app";
+
 // ナビゲーションアイテム
 export const NAVIGATION_ITEMS = [
   { id: "top", label: "Top", href: "#top" },

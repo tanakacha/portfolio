@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CURRENT_THEME } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 type SearchParams = Promise<{ from?: string; error?: string }>;
 
