@@ -21,6 +21,7 @@ export default async function Icon() {
           justifyContent: "center",
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={dataUrl} alt="" width={512} height={512} />
       </div>
     ),
