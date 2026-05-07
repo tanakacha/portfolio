@@ -120,15 +120,13 @@ function CardFace({
               NEW
             </span>
           )}
-          <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6 w-full">
-            <div className="min-h-full flex items-center justify-center">
-              <p
-                className="text-xs leading-relaxed whitespace-pre-line w-full"
-                style={{ color: CURRENT_THEME.text }}
-              >
-                {post.body}
-              </p>
-            </div>
+          <div className="flex-1 px-6 py-6 w-full flex items-center justify-center">
+            <p
+              className="text-xs leading-relaxed whitespace-pre-line w-full"
+              style={{ color: CURRENT_THEME.text }}
+            >
+              {post.body}
+            </p>
           </div>
           {/* 左右クリック領域 (z-10) */}
           <button
@@ -230,7 +228,7 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
 
   if (!isMounted) {
     return (
-      <div id="tsurezure" aria-label="Tsurezure" className="flex flex-col">
+      <div id="tsurezure" aria-label="Tsurezure" className="flex flex-col w-full max-w-[300px] mx-auto md:max-w-none">
         <div
           className="border-2 rounded-lg aspect-[4/3]"
           style={{
@@ -318,7 +316,7 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
   const backLiked = backPost !== null && likedIds.has(backPost.id);
 
   return (
-    <div id="tsurezure" aria-label="Tsurezure" className="flex flex-col">
+    <div id="tsurezure" aria-label="Tsurezure" className="flex flex-col w-full max-w-[300px] mx-auto md:max-w-none">
       <div
         className="relative aspect-[4/3] mb-4"
         style={{ perspective: '1200px' }}

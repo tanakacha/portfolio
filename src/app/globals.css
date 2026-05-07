@@ -63,12 +63,3 @@ body {
 .work-card.open::after {
   transform: scaleX(1);
 }
-
-/* スクロール機能は維持してスクロールバーだけ非表示 */
-.no-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge legacy */
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome / Safari */
-}
