@@ -10,3 +10,12 @@ export async function likePost(postId: number): Promise<number> {
   if (error) throw new Error(`likePost: ${error.message}`);
   return data as number;
 }
+
+export async function unlikePost(postId: number): Promise<number> {
+  const supabase = getPublicSupabase();
+  const { data, error } = await supabase.rpc("decrement_post_like", {
+    p_post_id: postId,
+  });
+  if (error) throw new Error(`unlikePost: ${error.message}`);
+  return data as number;
+}

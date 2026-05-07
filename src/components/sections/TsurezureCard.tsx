@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Post } from '@/types/post';
 import { CURRENT_THEME } from '@/lib/constants';
-import { likePost } from '@/app/actions/posts';
+import { likePost, unlikePost } from '@/app/actions/posts';
 
 type SortOrder = 'random' | 'newest' | 'oldest';
 
@@ -42,7 +42,7 @@ function HeartButton({
       disabled={disabled}
       className="flex items-center gap-1 hover:opacity-70 transition-opacity bg-transparent p-1 disabled:cursor-default"
       style={{ border: 'none' }}
-      aria-label={liked ? 'いいね済み' : 'いいねする'}
+      aria-label={liked ? 'いいねを取り消す' : 'いいねする'}
       aria-pressed={liked}
     >
       <svg
@@ -271,15 +271,25 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
   const handleNext = () => move('forward');
   const handlePrev = () => move('backward');
 
-  const handleLike = async (postId: number) => {
-    if (likedIds.has(postId)) return;
+  const toggleLike = async (postId: number) => {
+    const wasLiked = likedIds.has(postId);
+    const currentCount =
+      likeCounts[postId] ??
+      sortedPosts.find((p) => p.id === postId)?.likeCount ??
+      0;
 
     // 楽観的更新
     const newLikedIds = new Set(likedIds);
-    newLikedIds.add(postId);
+    if (wasLiked) {
+      newLikedIds.delete(postId);
+    } else {
+      newLikedIds.add(postId);
+    }
     setLikedIds(newLikedIds);
-    const optimisticCount =
-      (likeCounts[postId] ?? sortedPosts.find((p) => p.id === postId)?.likeCount ?? 0) + 1;
+
+    const optimisticCount = wasLiked
+      ? Math.max(0, currentCount - 1)
+      : currentCount + 1;
     setLikeCounts((c) => ({ ...c, [postId]: optimisticCount }));
     localStorage.setItem(
       LIKES_STORAGE_KEY,
@@ -288,17 +298,20 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
 
     // サーバ呼び出し
     try {
-      const newCount = await likePost(postId);
+      const newCount = wasLiked
+        ? await unlikePost(postId)
+        : await likePost(postId);
       setLikeCounts((c) => ({ ...c, [postId]: newCount }));
     } catch {
       // 失敗時はロールバック
       const rolledBack = new Set(likedIds);
-      rolledBack.delete(postId);
+      if (wasLiked) {
+        rolledBack.add(postId);
+      } else {
+        rolledBack.delete(postId);
+      }
       setLikedIds(rolledBack);
-      setLikeCounts((c) => ({
-        ...c,
-        [postId]: Math.max(0, optimisticCount - 1),
-      }));
+      setLikeCounts((c) => ({ ...c, [postId]: currentCount }));
       localStorage.setItem(
         LIKES_STORAGE_KEY,
         JSON.stringify(Array.from(rolledBack)),
@@ -335,12 +348,12 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
             rotated={false}
             onPrev={handlePrev}
             onNext={handleNext}
-            onLike={() => frontPost && handleLike(frontPost.id)}
+            onLike={() => frontPost && toggleLike(frontPost.id)}
             liked={frontLiked}
             count={frontCount}
             showCount={showLikeCount}
             navDisabled={isAnimating}
-            likeDisabled={frontLiked || isAnimating}
+            likeDisabled={isAnimating}
           />
           <CardFace
             post={backPost}
@@ -348,12 +361,12 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
             rotated={true}
             onPrev={handlePrev}
             onNext={handleNext}
-            onLike={() => backPost && handleLike(backPost.id)}
+            onLike={() => backPost && toggleLike(backPost.id)}
             liked={backLiked}
             count={backCount}
             showCount={showLikeCount}
             navDisabled={isAnimating}
-            likeDisabled={backLiked || isAnimating}
+            likeDisabled={isAnimating}
           />
         </div>
       </div>
