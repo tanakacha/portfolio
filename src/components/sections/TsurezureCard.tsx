@@ -3,23 +3,99 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Post } from '@/types/post';
 import { CURRENT_THEME } from '@/lib/constants';
+import { likePost } from '@/app/actions/posts';
 
 type SortOrder = 'random' | 'newest' | 'oldest';
 
 const STORAGE_KEY = 'tsurezure:lastSeenPostId';
+const LIKES_STORAGE_KEY = 'tsurezure:likedPostIds';
 const FLIP_DURATION_MS = 800;
 
 interface Props {
   posts: Post[];
+  showLikeCount?: boolean;
+}
+
+interface HeartButtonProps {
+  liked: boolean;
+  count: number;
+  showCount: boolean;
+  onClick: () => void;
+  disabled: boolean;
+}
+
+function HeartButton({
+  liked,
+  count,
+  showCount,
+  onClick,
+  disabled,
+}: HeartButtonProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick();
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={disabled}
+      className="flex items-center gap-1 hover:opacity-70 transition-opacity bg-transparent p-1 disabled:cursor-default"
+      style={{ border: 'none' }}
+      aria-label={liked ? 'いいね済み' : 'いいねする'}
+      aria-pressed={liked}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        fill={liked ? CURRENT_THEME.border : 'none'}
+        stroke={CURRENT_THEME.border}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+      {showCount && (
+        <span
+          className="text-xs tabular-nums"
+          style={{ color: CURRENT_THEME.text }}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
 }
 
 interface CardFaceProps {
   post: Post | null;
   isNew: boolean;
   rotated: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  onLike: () => void;
+  liked: boolean;
+  count: number;
+  showCount: boolean;
+  navDisabled: boolean;
+  likeDisabled: boolean;
 }
 
-function CardFace({ post, isNew, rotated }: CardFaceProps) {
+function CardFace({
+  post,
+  isNew,
+  rotated,
+  onPrev,
+  onNext,
+  onLike,
+  liked,
+  count,
+  showCount,
+  navDisabled,
+  likeDisabled,
+}: CardFaceProps) {
   return (
     <div
       className="absolute inset-0 border-2 rounded-lg flex flex-col overflow-hidden"
@@ -35,7 +111,7 @@ function CardFace({ post, isNew, rotated }: CardFaceProps) {
         <>
           {isNew && (
             <span
-              className="absolute top-3 right-3 text-xs font-bold px-2 py-1 rounded z-10"
+              className="absolute top-3 right-3 text-xs font-bold px-2 py-1 rounded z-20"
               style={{
                 backgroundColor: CURRENT_THEME.accent,
                 color: CURRENT_THEME.text,
@@ -44,7 +120,7 @@ function CardFace({ post, isNew, rotated }: CardFaceProps) {
               NEW
             </span>
           )}
-          <div className="flex-1 overflow-y-auto px-6 py-6 w-full">
+          <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6 w-full">
             <div className="min-h-full flex items-center justify-center">
               <p
                 className="text-xs leading-relaxed whitespace-pre-line w-full"
@@ -54,13 +130,40 @@ function CardFace({ post, isNew, rotated }: CardFaceProps) {
               </p>
             </div>
           </div>
+          {/* 左右クリック領域 (z-10) */}
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={navDisabled}
+            className="absolute left-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer z-10"
+            style={{ border: 'none' }}
+            aria-label="前のつぶやき"
+          />
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={navDisabled}
+            className="absolute right-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer z-10"
+            style={{ border: 'none' }}
+            aria-label="次のつぶやき"
+          />
+          {/* ハート (z-20、左右ボタンより上) */}
+          <div className="absolute bottom-2 right-2 z-20">
+            <HeartButton
+              liked={liked}
+              count={count}
+              showCount={showCount}
+              onClick={onLike}
+              disabled={likeDisabled}
+            />
+          </div>
         </>
       )}
     </div>
   );
 }
 
-export default function TsurezureCard({ posts }: Props) {
+export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
   const [sortOrder, setSortOrder] = useState<SortOrder>('random');
   const [lastSeenId, setLastSeenId] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -68,11 +171,31 @@ export default function TsurezureCard({ posts }: Props) {
   const [frontIndex, setFrontIndex] = useState(0);
   const [backIndex, setBackIndex] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+  const [likeCounts, setLikeCounts] = useState<Record<number, number>>({});
+
+  // posts 初期同期: like_count をローカル state に取り込む
+  useEffect(() => {
+    const initial: Record<number, number> = {};
+    posts.forEach((p) => {
+      initial[p.id] = p.likeCount;
+    });
+    setLikeCounts(initial);
+  }, [posts]);
 
   useEffect(() => {
     setIsMounted(true);
     const stored = localStorage.getItem(STORAGE_KEY);
     setLastSeenId(stored ? Number(stored) : null);
+    const storedLikes = localStorage.getItem(LIKES_STORAGE_KEY);
+    if (storedLikes) {
+      try {
+        const arr = JSON.parse(storedLikes) as number[];
+        setLikedIds(new Set(arr));
+      } catch {
+        // パース失敗時は無視
+      }
+    }
     return () => {
       if (posts.length > 0) {
         const maxId = Math.max(...posts.map((p) => p.id));
@@ -123,8 +246,6 @@ export default function TsurezureCard({ posts }: Props) {
   const turnCount = Math.round(rotation / 180);
   const isFrontVisible = ((turnCount % 2) + 2) % 2 === 0;
   const visibleIndex = isFrontVisible ? frontIndex : backIndex;
-  const visiblePost =
-    visibleIndex !== null ? sortedPosts[visibleIndex] : null;
 
   const frontPost = sortedPosts[frontIndex] ?? null;
   const backPost = backIndex !== null ? sortedPosts[backIndex] ?? null : null;
@@ -152,6 +273,50 @@ export default function TsurezureCard({ posts }: Props) {
   const handleNext = () => move('forward');
   const handlePrev = () => move('backward');
 
+  const handleLike = async (postId: number) => {
+    if (likedIds.has(postId)) return;
+
+    // 楽観的更新
+    const newLikedIds = new Set(likedIds);
+    newLikedIds.add(postId);
+    setLikedIds(newLikedIds);
+    const optimisticCount =
+      (likeCounts[postId] ?? sortedPosts.find((p) => p.id === postId)?.likeCount ?? 0) + 1;
+    setLikeCounts((c) => ({ ...c, [postId]: optimisticCount }));
+    localStorage.setItem(
+      LIKES_STORAGE_KEY,
+      JSON.stringify(Array.from(newLikedIds)),
+    );
+
+    // サーバ呼び出し
+    try {
+      const newCount = await likePost(postId);
+      setLikeCounts((c) => ({ ...c, [postId]: newCount }));
+    } catch {
+      // 失敗時はロールバック
+      const rolledBack = new Set(likedIds);
+      rolledBack.delete(postId);
+      setLikedIds(rolledBack);
+      setLikeCounts((c) => ({
+        ...c,
+        [postId]: Math.max(0, optimisticCount - 1),
+      }));
+      localStorage.setItem(
+        LIKES_STORAGE_KEY,
+        JSON.stringify(Array.from(rolledBack)),
+      );
+    }
+  };
+
+  const frontCount =
+    frontPost !== null
+      ? likeCounts[frontPost.id] ?? frontPost.likeCount
+      : 0;
+  const frontLiked = frontPost !== null && likedIds.has(frontPost.id);
+  const backCount =
+    backPost !== null ? likeCounts[backPost.id] ?? backPost.likeCount : 0;
+  const backLiked = backPost !== null && likedIds.has(backPost.id);
+
   return (
     <div id="tsurezure" aria-label="Tsurezure" className="flex flex-col">
       <div
@@ -166,25 +331,33 @@ export default function TsurezureCard({ posts }: Props) {
             transform: `rotateY(${rotation}deg)`,
           }}
         >
-          <CardFace post={frontPost} isNew={frontIsNew} rotated={false} />
-          <CardFace post={backPost} isNew={backIsNew} rotated={true} />
+          <CardFace
+            post={frontPost}
+            isNew={frontIsNew}
+            rotated={false}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onLike={() => frontPost && handleLike(frontPost.id)}
+            liked={frontLiked}
+            count={frontCount}
+            showCount={showLikeCount}
+            navDisabled={isAnimating}
+            likeDisabled={frontLiked || isAnimating}
+          />
+          <CardFace
+            post={backPost}
+            isNew={backIsNew}
+            rotated={true}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onLike={() => backPost && handleLike(backPost.id)}
+            liked={backLiked}
+            count={backCount}
+            showCount={showLikeCount}
+            navDisabled={isAnimating}
+            likeDisabled={backLiked || isAnimating}
+          />
         </div>
-        <button
-          type="button"
-          onClick={handlePrev}
-          disabled={isAnimating}
-          className="absolute left-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer"
-          style={{ border: 'none' }}
-          aria-label="前のつぶやき"
-        />
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={isAnimating}
-          className="absolute right-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer"
-          style={{ border: 'none' }}
-          aria-label="次のつぶやき"
-        />
       </div>
       <div className="flex items-center justify-center gap-2">
         <select
