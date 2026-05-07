@@ -3,4 +3,5 @@ export interface Post {
   body: string;
   createdAt: string;
   likeCount: number;
+  nextPostId: number | null;
 }

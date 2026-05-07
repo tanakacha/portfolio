@@ -203,18 +203,52 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
   }, [posts]);
 
   const sortedPosts = useMemo(() => {
+    let base: Post[];
     if (sortOrder === 'newest') {
-      return [...posts].sort((a, b) => b.id - a.id);
+      base = [...posts].sort((a, b) => b.id - a.id);
+    } else if (sortOrder === 'oldest') {
+      base = [...posts].sort((a, b) => a.id - b.id);
+    } else {
+      const shuffled = [...posts];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      base = shuffled;
     }
-    if (sortOrder === 'oldest') {
-      return [...posts].sort((a, b) => a.id - b.id);
+
+    // ペア制約: A.nextPostId = B.id なら、ベース順序にかかわらず A の直後に B を挿入
+    const childIds = new Set(
+      posts.filter((p) => p.nextPostId != null).map((p) => p.nextPostId!),
+    );
+    const byId = new Map(posts.map((p) => [p.id, p]));
+    const visited = new Set<number>();
+    const result: Post[] = [];
+
+    const appendChain = (start: Post) => {
+      if (visited.has(start.id)) return;
+      visited.add(start.id);
+      result.push(start);
+      let nextId = start.nextPostId;
+      while (nextId != null && !visited.has(nextId)) {
+        const child = byId.get(nextId);
+        if (!child) break;
+        visited.add(child.id);
+        result.push(child);
+        nextId = child.nextPostId;
+      }
+    };
+
+    // チェーンの先頭 (= 子として参照されていない) から並べる
+    for (const p of base) {
+      if (childIds.has(p.id)) continue;
+      appendChain(p);
     }
-    const shuffled = [...posts];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // 循環があった場合のフォールバック: visited 漏れを末尾に追加
+    for (const p of base) {
+      if (!visited.has(p.id)) result.push(p);
     }
-    return shuffled;
+    return result;
   }, [posts, sortOrder]);
 
   // 並び替え変更時はリセット
