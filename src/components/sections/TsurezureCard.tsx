@@ -98,12 +98,17 @@ function CardFace({
 }: CardFaceProps) {
   return (
     <div
-      className="absolute inset-0 border-2 rounded-lg flex flex-col overflow-hidden"
+      className="absolute inset-0 border-2 flex flex-col overflow-hidden washi-texture"
       style={{
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
         borderColor: CURRENT_THEME.border,
         backgroundColor: CURRENT_THEME.background,
+        // 手で切った紙のような不均一な角
+        borderRadius: '14px 14px 12px 12px',
+        // 紙が机に置かれている柔らかい影
+        boxShadow:
+          '0 6px 16px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04)',
         transform: rotated ? 'rotateY(180deg)' : 'rotateY(0deg)',
       }}
     >
@@ -120,10 +125,14 @@ function CardFace({
               NEW
             </span>
           )}
-          <div className="flex-1 px-6 py-6 w-full flex items-center justify-center">
+          <div className="flex-1 px-7 py-7 w-full flex items-center justify-center">
             <p
-              className="text-xs leading-relaxed whitespace-pre-line w-full"
-              style={{ color: CURRENT_THEME.text }}
+              className="text-xs whitespace-pre-line w-full"
+              style={{
+                color: CURRENT_THEME.text,
+                lineHeight: 1.85,
+                letterSpacing: '0.04em',
+              }}
             >
               {post.body}
             </p>
@@ -264,10 +273,13 @@ export default function TsurezureCard({ posts, showLikeCount = false }: Props) {
     return (
       <div id="tsurezure" aria-label="Tsurezure" className="flex flex-col w-full max-w-[300px] mx-auto md:max-w-none">
         <div
-          className="border-2 rounded-lg aspect-[4/3]"
+          className="border-2 aspect-[4/3]"
           style={{
             borderColor: CURRENT_THEME.border,
             backgroundColor: CURRENT_THEME.background,
+            borderRadius: '14px 11px 13px 12px',
+            boxShadow:
+              '0 6px 16px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04)',
           }}
         />
       </div>

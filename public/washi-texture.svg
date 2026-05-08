@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+  <filter id="washi">
+    <!-- 大きめのノイズ模様を生成 (alpha 0..1) -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="10" seed="3" />
+
+    <!-- 1. 色を薄いセピアに固定し、alpha を反転 (暗い場所が不透明、明るい場所が透明) -->
+    <feColorMatrix
+      values="0 0 0 0    0.45
+              0 0 0 0    0.32
+              0 0 0 0    0.20
+              0 0 0 -1.2   1" />
+
+    <!-- 2. 反転後の alpha を gamma で押し下げ、中間値を薄くして「純粋に暗い部分だけ濃く」 -->
+    <feComponentTransfer>
+      <feFuncA type="gamma" amplitude="1" exponent="8" offset="0" />
+    </feComponentTransfer>
+  </filter>
+  <rect width="240" height="240" filter="url(#washi)" />
+</svg>
