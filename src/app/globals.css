@@ -3,6 +3,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* テーマカラー (default テーマの値で初期化、ThemeSwitcher で書き換え) */
+  --theme-background: #FFFFFF;
+  --theme-text: #192138;
+  --theme-text-secondary: #A6A8B2;
+  --theme-border: #F3B6B4;
+  --theme-accent: #A5DBC0;
+}
+
+/* テーマ切替時のフェード */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 500ms;
+  transition-timing-function: ease;
 }
 
 @theme inline {

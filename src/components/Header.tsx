@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { CURRENT_THEME, NAVIGATION_ITEMS } from '@/lib/constants';
+import ThemeSwitcher from './ThemeSwitcher';
 
 type Variant = 'public' | 'private';
 
@@ -114,17 +115,21 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
                 </li>
               ))}
             </ul>
-            <div className="hidden md:block">
+            <div className="hidden md:flex items-center gap-3">
+              <ThemeSwitcher />
               <AuthAction />
             </div>
-            <button
-              className="md:hidden text-xl transition-colors"
-              style={{ color: CURRENT_THEME.text }}
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Open menu"
-            >
-              ☰
-            </button>
+            <div className="md:hidden flex items-center gap-2">
+              <ThemeSwitcher />
+              <button
+                className="text-xl transition-colors"
+                style={{ color: CURRENT_THEME.text }}
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Open menu"
+              >
+                ☰
+              </button>
+            </div>
           </div>
         </nav>
       </div>
