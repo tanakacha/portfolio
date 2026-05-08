@@ -1,3 +1,27 @@
+export type WorkStoryDisplayStyle =
+  | 'default'
+  | 'highlight'
+  | 'collapsed'
+  | 'expanded';
+
+export interface WorkStory {
+  id: number;
+  title?: string;
+  body: string[];
+  sortOrder: number;
+  displayStyle: WorkStoryDisplayStyle;
+}
+
+export type WorkDetailDisplayStyle = 'default' | 'highlight';
+
+export interface WorkDetail {
+  id: number;
+  label: string;
+  value: string;
+  sortOrder: number;
+  displayStyle: WorkDetailDisplayStyle;
+}
+
 export interface Work {
   id: string;
   title: string;
@@ -10,4 +34,6 @@ export interface Work {
     appStore?: string;
     googlePlay?: string;
   };
+  stories: WorkStory[];
+  details: WorkDetail[];
 }

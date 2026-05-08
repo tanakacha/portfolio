@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import Image from 'next/image';
 import { Work } from '@/types/work';
 import { CURRENT_THEME } from '@/lib/constants';
@@ -332,12 +332,47 @@ export default function WorkCard({ work }: Props) {
         )}
         <div className="order-3 mb-4 md:hidden w-full">{ImageBlock}</div>
         <div
-          className="text-sm order-4 md:order-3 md:pr-8"
+          className="text-sm order-4 md:order-3 md:pr-8 flex flex-col gap-4"
           style={{ color: CURRENT_THEME.text }}
         >
-          {work.description.map((line, index) => (
-            <div key={index}>{line === '' ? <br /> : line}</div>
-          ))}
+          <div>
+            {work.description.map((line, index) => (
+              <div key={index}>{line === '' ? <br /> : line}</div>
+            ))}
+          </div>
+
+          {work.details.length > 0 && (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+              {work.details.map((d) => (
+                <Fragment key={d.id}>
+                  <dt className="font-semibold whitespace-nowrap">
+                    {d.label}
+                  </dt>
+                  <dd>{d.value}</dd>
+                </Fragment>
+              ))}
+            </dl>
+          )}
+
+          {/* 開発秘話 */}
+          {work.stories.length > 0 && (
+            <div className="flex flex-col gap-3">
+              {work.stories.map((s) => (
+                <div
+                  key={s.id}
+                  className="border-l-2 pl-3"
+                  style={{ borderColor: CURRENT_THEME.border }}
+                >
+                  {s.title && (
+                    <h4 className="font-semibold mb-1">{s.title}</h4>
+                  )}
+                  {s.body.map((line, i) => (
+                    <div key={i}>{line === '' ? <br /> : line}</div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="hidden md:flex w-1/2 justify-center md:justify-start items-center">
