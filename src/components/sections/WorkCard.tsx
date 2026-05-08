@@ -313,9 +313,26 @@ export default function WorkCard({ work }: Props) {
         >
           {work.title}
         </h3>
-        <div className="order-2 mb-4 md:hidden w-full">{ImageBlock}</div>
+        {work.technologies.length > 0 && (
+          <ul className="order-2 flex flex-wrap gap-2 mb-4">
+            {work.technologies.map((tech, i) => (
+              <li
+                key={i}
+                className="px-3 py-1 rounded-full text-xs border-2"
+                style={{
+                  backgroundColor: 'transparent',
+                  borderColor: CURRENT_THEME.border,
+                  color: CURRENT_THEME.text,
+                }}
+              >
+                {tech}
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="order-3 mb-4 md:hidden w-full">{ImageBlock}</div>
         <div
-          className="text-sm order-3 md:order-2 md:pr-8"
+          className="text-sm order-4 md:order-3 md:pr-8"
           style={{ color: CURRENT_THEME.text }}
         >
           {work.description.map((line, index) => (
