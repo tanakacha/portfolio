@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getPrivateProfile } from "@/content/private/profile.private";
 import { CURRENT_THEME } from "@/lib/constants";
+import { BLUR_DATA_URL } from "@/lib/utils";
 import TsurezureCard from "./TsurezureCard";
 import { Post } from "@/types/post";
 
@@ -35,6 +36,10 @@ export default async function PrivateHeroSection({ posts }: Props) {
                 alt={profile.fullName}
                 width={300}
                 height={300}
+                sizes="300px"
+                priority
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 className="w-full h-full object-cover"
               />
             </div>

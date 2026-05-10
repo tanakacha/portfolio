@@ -12,6 +12,7 @@ const supabaseHostname = (() => {
 
 const nextConfig: NextConfig = {
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: supabaseHostname
       ? [
           {

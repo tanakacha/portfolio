@@ -4,6 +4,11 @@ import { useState, useEffect, useRef, Fragment } from 'react';
 import Image from 'next/image';
 import { Work } from '@/types/work';
 import { CURRENT_THEME } from '@/lib/constants';
+import { BLUR_DATA_URL } from '@/lib/utils';
+
+// Works カードの画像はビューポート幅に対して PC で max-w-6xl の半分(約 560px),
+// モバイルで全幅相当 → next/image が適切な srcset を選べるように指定
+const WORK_IMAGE_SIZES = '(min-width: 768px) 560px, 100vw';
 
 const iconMap: Record<string, { src: string; alt: string }> = {
   github: { src: '/icons/github.svg', alt: 'GitHub' },
@@ -228,6 +233,9 @@ export default function WorkCard({ work }: Props) {
               alt=""
               width={400}
               height={200}
+              sizes={WORK_IMAGE_SIZES}
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
               className="w-full h-auto object-cover"
               aria-hidden="true"
             />
@@ -240,8 +248,10 @@ export default function WorkCard({ work }: Props) {
                 alt={`${work.title} ${i + 1}/${images.length}`}
                 width={400}
                 height={200}
+                sizes={WORK_IMAGE_SIZES}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 className="w-full h-auto object-cover"
-                priority={i === 0}
               />
             </div>
           ))}
@@ -252,6 +262,9 @@ export default function WorkCard({ work }: Props) {
               alt=""
               width={400}
               height={200}
+              sizes={WORK_IMAGE_SIZES}
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
               className="w-full h-auto object-cover"
               aria-hidden="true"
             />
