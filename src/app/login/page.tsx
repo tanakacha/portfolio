@@ -65,7 +65,7 @@ export default async function LoginPage({
               style={{ color: CURRENT_THEME.border }}
             >
               試行回数が多すぎます。しばらく時間を置いてから、ページを再読み込みしてお試しください。<br />
-              公開ページは <Link href="/" className="underline">こちら</Link> から見られます。<br />
+              公開ページは <Link href="/?welcome=skip" className="underline">こちら</Link> から見られます。<br />
               パスワードが分からない場合はご連絡ください。
             </p>
           )}

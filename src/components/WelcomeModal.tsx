@@ -14,6 +14,13 @@ export default function WelcomeModal({ isAuthed }: WelcomeModalProps) {
 
   useEffect(() => {
     if (isAuthed) return;
+    // レート制限経由で公開ページに来た場合は、モーダルを出さない
+    // (localStorage は触らないので、後日普通に訪問すれば再度表示される)
+    try {
+      if (new URLSearchParams(window.location.search).get('welcome') === 'skip') return;
+    } catch {
+      // ignore
+    }
     try {
       if (localStorage.getItem(STORAGE_KEY) === '1') return;
     } catch {
