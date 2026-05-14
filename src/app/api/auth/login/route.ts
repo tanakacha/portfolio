@@ -5,6 +5,12 @@ import {
   createSessionToken,
   verifyPassword,
 } from "@/lib/auth";
+import {
+  extractClientIp,
+  hashIp,
+  isLoginRateLimited,
+  recordLoginFailure,
+} from "@/lib/rate-limit";
 
 function isSafePath(value: string | null): value is string {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//");
@@ -30,7 +36,17 @@ export async function POST(req: NextRequest) {
   const fromRaw = form.get("from");
   const from = typeof fromRaw === "string" && isSafePath(fromRaw) ? fromRaw : "/private";
 
+  const ipHash = await hashIp(extractClientIp(req.headers));
+
+  if (await isLoginRateLimited(ipHash)) {
+    const limitUrl = new URL("/login", req.url);
+    limitUrl.searchParams.set("error", "ratelimit");
+    limitUrl.searchParams.set("from", from);
+    return NextResponse.redirect(limitUrl, 303);
+  }
+
   if (!verifyPassword(password)) {
+    await recordLoginFailure(ipHash);
     const failUrl = new URL("/login", req.url);
     failUrl.searchParams.set("error", "1");
     failUrl.searchParams.set("from", from);

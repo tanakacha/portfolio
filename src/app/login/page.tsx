@@ -16,6 +16,7 @@ export default async function LoginPage({
   const params = await searchParams;
   const from = typeof params.from === "string" ? params.from : "/private";
   const hasError = params.error === "1";
+  const isRateLimited = params.error === "ratelimit";
 
   return (
     <main
@@ -51,6 +52,16 @@ export default async function LoginPage({
           {hasError && (
             <p className="text-sm" style={{ color: CURRENT_THEME.border }}>
               パスワードが違います
+            </p>
+          )}
+          {isRateLimited && (
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: CURRENT_THEME.border }}
+            >
+              試行回数が多すぎます。しばらく時間を置いてからお試しください。<br />
+              公開ページは <Link href="/" className="underline">こちら</Link> から見られます。<br />
+              パスワードが分からない場合はご連絡ください。
             </p>
           )}
           <p
