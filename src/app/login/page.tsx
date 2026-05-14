@@ -45,8 +45,13 @@ export default async function LoginPage({
               name="password"
               autoComplete="current-password"
               required
-              className="border rounded px-3 py-2 text-base"
-              style={{ borderColor: CURRENT_THEME.border, color: CURRENT_THEME.text }}
+              disabled={isRateLimited}
+              className="border rounded px-3 py-2 text-base disabled:cursor-not-allowed"
+              style={{
+                borderColor: isRateLimited ? "#d4d4d4" : CURRENT_THEME.border,
+                backgroundColor: isRateLimited ? "#f5f5f5" : "transparent",
+                color: isRateLimited ? "#a3a3a3" : CURRENT_THEME.text,
+              }}
             />
           </label>
           {hasError && (
@@ -59,7 +64,7 @@ export default async function LoginPage({
               className="text-sm leading-relaxed"
               style={{ color: CURRENT_THEME.border }}
             >
-              試行回数が多すぎます。しばらく時間を置いてからお試しください。<br />
+              試行回数が多すぎます。しばらく時間を置いてから、ページを再読み込みしてお試しください。<br />
               公開ページは <Link href="/" className="underline">こちら</Link> から見られます。<br />
               パスワードが分からない場合はご連絡ください。
             </p>
@@ -78,7 +83,8 @@ export default async function LoginPage({
           </p>
           <button
             type="submit"
-            className="rounded px-4 py-2 font-medium transition-opacity hover:opacity-80"
+            disabled={isRateLimited}
+            className="rounded px-4 py-2 font-medium transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: CURRENT_THEME.border, color: CURRENT_THEME.background }}
           >
             Enter
