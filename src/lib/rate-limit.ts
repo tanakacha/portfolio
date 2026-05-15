@@ -2,8 +2,13 @@ import "server-only";
 import { getAdminSupabase } from "./supabase";
 import { AUTH_SECRET } from "./env";
 
-export const LOGIN_RATE_LIMIT_WINDOW_MINUTES = 15;
-export const LOGIN_RATE_LIMIT_MAX_FAILURES = 10;
+// 段階的ロックアウト: いずれかの条件を満たすとロック
+// (短期の brute force と、IP 切替や時間をかけた総当たり攻撃の両方を捉える)
+const LOGIN_LOCKOUT_TIERS = [
+  { windowMinutes: 15, maxFailures: 5 },
+  { windowMinutes: 60, maxFailures: 10 },
+  { windowMinutes: 60 * 24, maxFailures: 20 },
+] as const;
 
 const encoder = new TextEncoder();
 
@@ -63,19 +68,26 @@ function expandIpv6(ip: string): string[] | null {
 
 export async function isLoginRateLimited(ipHash: string): Promise<boolean> {
   const supabase = getAdminSupabase();
-  const since = new Date(
-    Date.now() - LOGIN_RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
-  ).toISOString();
-  const { count, error } = await supabase
+  const now = Date.now();
+  // 最大ウィンドウ (24h) 分の試行を取得し、各ティアの判定はメモリ上で行う
+  const longestWindowMs = Math.max(...LOGIN_LOCKOUT_TIERS.map((t) => t.windowMinutes)) * 60 * 1000;
+  const since = new Date(now - longestWindowMs).toISOString();
+  const { data, error } = await supabase
     .from("auth_attempts")
-    .select("*", { count: "exact", head: true })
+    .select("attempted_at")
     .eq("ip_hash", ipHash)
     .gte("attempted_at", since);
   if (error) {
     console.error("[rate-limit] count failed", error);
     return false;
   }
-  return (count ?? 0) >= LOGIN_RATE_LIMIT_MAX_FAILURES;
+  if (!data) return false;
+  const timestamps = data.map((r) => new Date(r.attempted_at).getTime());
+  return LOGIN_LOCKOUT_TIERS.some(
+    (tier) =>
+      timestamps.filter((t) => now - t <= tier.windowMinutes * 60 * 1000).length >=
+      tier.maxFailures,
+  );
 }
 
 export async function recordLoginFailure(ipHash: string): Promise<void> {
