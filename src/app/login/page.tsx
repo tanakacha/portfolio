@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { CURRENT_THEME } from "@/lib/constants";
+import { extractClientIp, hashIp, isLoginRateLimited } from "@/lib/rate-limit";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -16,7 +18,11 @@ export default async function LoginPage({
   const params = await searchParams;
   const from = typeof params.from === "string" ? params.from : "/private";
   const hasError = params.error === "1";
-  const isRateLimited = params.error === "ratelimit";
+  // ロック状態は URL クエリではなくサーバー側で実状態を判定する
+  // (リロードでロック解除を反映させるため。URL の ?error=ratelimit は無視される)
+  const headersList = await headers();
+  const ipHash = await hashIp(extractClientIp(headersList));
+  const isRateLimited = await isLoginRateLimited(ipHash);
 
   return (
     <main
