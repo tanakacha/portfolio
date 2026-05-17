@@ -1,6 +1,6 @@
 import "server-only";
 import { getAdminSupabase } from "./supabase";
-import { AUTH_SECRET } from "./env";
+import { AUTH_SECRET, DISCORD_ALERT_WEBHOOK_URL } from "./env";
 
 // 段階的ロックアウト: いずれかの条件を満たすとロック
 // (短期の brute force と、IP 切替や時間をかけた総当たり攻撃の両方を捉える)
@@ -95,5 +95,62 @@ export async function recordLoginFailure(ipHash: string): Promise<void> {
   const { error } = await supabase
     .from("auth_attempts")
     .insert({ ip_hash: ipHash });
-  if (error) console.error("[rate-limit] insert failed", error);
+  if (error) {
+    console.error("[rate-limit] insert failed", error);
+    return;
+  }
+  await maybeAlertOnLockout(ipHash);
+}
+
+// この失敗で「ちょうどロックアウト閾値に到達した」場合のみ通知する。
+// 各ティアで「count == 閾値」の瞬間だけ発火するので、同じ攻撃で最大 3通 (5/10/20)。
+async function maybeAlertOnLockout(ipHash: string): Promise<void> {
+  if (!DISCORD_ALERT_WEBHOOK_URL) return;
+  const supabase = getAdminSupabase();
+  const now = Date.now();
+  const longestWindowMs =
+    Math.max(...LOGIN_LOCKOUT_TIERS.map((t) => t.windowMinutes)) * 60 * 1000;
+  const since = new Date(now - longestWindowMs).toISOString();
+  const { data, error } = await supabase
+    .from("auth_attempts")
+    .select("attempted_at")
+    .eq("ip_hash", ipHash)
+    .gte("attempted_at", since);
+  if (error || !data) return;
+  const timestamps = data.map((r) => new Date(r.attempted_at).getTime());
+  const crossed = LOGIN_LOCKOUT_TIERS.filter(
+    (tier) =>
+      timestamps.filter((t) => now - t <= tier.windowMinutes * 60 * 1000).length ===
+      tier.maxFailures,
+  );
+  if (crossed.length === 0) return;
+  await sendDiscordAlert(ipHash, crossed);
+}
+
+async function sendDiscordAlert(
+  ipHash: string,
+  crossed: readonly { windowMinutes: number; maxFailures: number }[],
+): Promise<void> {
+  if (!DISCORD_ALERT_WEBHOOK_URL) return;
+  const tierLines = crossed
+    .map((t) => `- 直近 ${t.windowMinutes} 分以内に ${t.maxFailures} 回失敗`)
+    .join("\n");
+  const content = [
+    "[Portfolio] ログインロックアウトが発火しました",
+    `ip_hash (先頭12文字): \`${ipHash.slice(0, 12)}\``,
+    "条件:",
+    tierLines,
+  ].join("\n");
+  try {
+    const res = await fetch(DISCORD_ALERT_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    if (!res.ok) {
+      console.error("[rate-limit] discord alert non-ok", res.status);
+    }
+  } catch (e) {
+    console.error("[rate-limit] discord alert failed", e);
+  }
 }
