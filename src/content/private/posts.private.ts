@@ -1,27 +1,52 @@
 import "server-only";
 import { Post } from "@/types/post";
+import { ReactionKey } from "@/lib/reactions";
 import { getAdminSupabase } from "@/lib/supabase";
 
-type Row = {
+type PostRow = {
   id: number;
   body: string;
   created_at: string;
-  like_count: number;
   next_post_id: number | null;
+};
+
+type ReactionRow = {
+  post_id: number;
+  reaction_key: string;
+  count: number;
 };
 
 export async function getPrivatePosts(): Promise<Post[]> {
   const supabase = getAdminSupabase();
-  const { data, error } = await supabase
+  const { data: postsData, error: postsError } = await supabase
     .from("posts")
-    .select("id, body, created_at, like_count, next_post_id")
+    .select("id, body, created_at, next_post_id")
     .order("created_at", { ascending: false });
-  if (error) throw new Error(`getPrivatePosts: ${error.message}`);
-  return (data as Row[]).map((r) => ({
-    id: r.id,
-    body: r.body,
-    createdAt: r.created_at,
-    likeCount: r.like_count,
-    nextPostId: r.next_post_id,
+  if (postsError) throw new Error(`getPrivatePosts: ${postsError.message}`);
+  const posts = postsData as PostRow[];
+  if (posts.length === 0) return [];
+
+  const { data: reactionsData, error: reactionsError } = await supabase
+    .from("post_reactions")
+    .select("post_id, reaction_key, count")
+    .in(
+      "post_id",
+      posts.map((p) => p.id),
+    );
+  if (reactionsError)
+    throw new Error(`getPrivatePosts (reactions): ${reactionsError.message}`);
+
+  const reactionsByPost = new Map<number, Partial<Record<ReactionKey, number>>>();
+  for (const r of reactionsData as ReactionRow[]) {
+    const existing = reactionsByPost.get(r.post_id) ?? {};
+    existing[r.reaction_key as ReactionKey] = r.count;
+    reactionsByPost.set(r.post_id, existing);
+  }
+  return posts.map((p) => ({
+    id: p.id,
+    body: p.body,
+    createdAt: p.created_at,
+    reactions: reactionsByPost.get(p.id) ?? {},
+    nextPostId: p.next_post_id,
   }));
 }

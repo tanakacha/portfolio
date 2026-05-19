@@ -81,7 +81,7 @@ export default async function PrivateHeroSection({ posts }: Props) {
               </ul>
             </div>
           </div>
-          <TsurezureCard posts={posts} />
+          <TsurezureCard posts={posts} variant="private" />
         </div>
       </div>
     </section>
