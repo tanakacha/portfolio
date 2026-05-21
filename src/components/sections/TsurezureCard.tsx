@@ -271,7 +271,7 @@ function CardFace({
 }: CardFaceProps) {
   return (
     <div
-      className="absolute inset-0 border-2 flex flex-col overflow-hidden washi-texture"
+      className="absolute inset-0 border-2 overflow-hidden washi-texture"
       style={{
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
@@ -296,8 +296,9 @@ function CardFace({
               NEW
             </span>
           )}
-          {/* テキスト領域 (左右クリック領域はここ内に限定) */}
-          <div className="flex-1 relative w-full flex items-center justify-center px-7 pt-7 pb-2">
+          {/* テキスト領域: カード全体を覆い、上下均等 padding で真の中央寄せ
+              (padding は リアクション領域高 ≒ 48px に合わせ、長文でも被らないようにする) */}
+          <div className="absolute inset-0 flex items-center justify-center px-7 py-12">
             <p
               className="text-xs whitespace-pre-line w-full"
               style={{
@@ -308,25 +309,26 @@ function CardFace({
             >
               {post.body}
             </p>
-            <button
-              type="button"
-              onClick={onPrev}
-              disabled={navDisabled}
-              className="absolute left-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer z-10"
-              style={{ border: 'none' }}
-              aria-label="前のつぶやき"
-            />
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={navDisabled}
-              className="absolute right-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer z-10"
-              style={{ border: 'none' }}
-              aria-label="次のつぶやき"
-            />
           </div>
-          {/* リアクション行 (フロー配置、テキスト領域とは独立) */}
-          <div className="flex items-center justify-end gap-1 px-3 pb-2">
+          {/* 左右クリック領域 (カード全体に対して) */}
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={navDisabled}
+            className="absolute left-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer z-10"
+            style={{ border: 'none' }}
+            aria-label="前のつぶやき"
+          />
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={navDisabled}
+            className="absolute right-0 top-0 w-1/2 h-full bg-transparent disabled:cursor-default cursor-pointer z-10"
+            style={{ border: 'none' }}
+            aria-label="次のつぶやき"
+          />
+          {/* リアクション (右下絶対配置) */}
+          <div className="absolute bottom-2 right-3 z-20 flex items-center gap-1">
             {reactionDefs.map((def) => (
               <ReactionButton
                 key={def.key}
