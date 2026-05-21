@@ -30,7 +30,7 @@ export default async function LoginPage({
       style={{ backgroundColor: CURRENT_THEME.background }}
     >
       <div
-        className="w-full max-w-sm rounded-lg border-2 p-8 shadow"
+        className="w-full max-w-md rounded-lg border-2 p-8 shadow"
         style={{ borderColor: CURRENT_THEME.border }}
       >
         <h1
@@ -79,7 +79,14 @@ export default async function LoginPage({
             className="text-xs leading-relaxed"
             style={{ color: CURRENT_THEME.textSecondary }}
           >
-            ヒント: 好きな短歌の初句（ローマ字）+ 大量に作りたいお菓子(英語)
+            {/* 狭めモバイル (< 380px): "ヒント: ... +" / 右寄せ "大量..." */}
+            <span className="whitespace-nowrap min-[380px]:hidden">ヒント: 好きな短歌の初句(ローマ字) +</span>
+            <span className="block text-right whitespace-nowrap min-[380px]:hidden">大量に作りたいお菓子(英語)</span>
+            {/* 中間モバイル (380-767px): "ヒント:" / 内容 */}
+            <span className="hidden min-[380px]:inline md:hidden">ヒント:</span>
+            <span className="hidden min-[380px]:block md:hidden whitespace-nowrap">好きな短歌の初句(ローマ字) + 大量に作りたいお菓子(英語)</span>
+            {/* PC (≥ 768px): 1行 */}
+            <span className="hidden md:inline whitespace-nowrap">ヒント: 好きな短歌の初句(ローマ字) + 大量に作りたいお菓子(英語)</span>
           </p>
           <p
             className="text-xs leading-relaxed"
