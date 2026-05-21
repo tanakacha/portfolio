@@ -187,18 +187,19 @@ export default function WorkCard({ work }: Props) {
             key={i}
             className="inline-block hover:opacity-80 transition-opacity"
           >
-            {iconInfo ? (
-              <Image
-                src={iconInfo.src}
-                alt={iconInfo.alt}
-                width={
-                  link.key === 'appStore' ? 80 : link.key === 'googlePlay' ? 95 : 24
-                }
-                height={
-                  link.key === 'appStore' ? 30 : link.key === 'googlePlay' ? 28 : 24
-                }
-              />
-            ) : (
+            {iconInfo ? (() => {
+              const w = link.key === 'appStore' ? 80 : link.key === 'googlePlay' ? 95 : 24;
+              const h = link.key === 'appStore' ? 30 : link.key === 'googlePlay' ? 28 : 24;
+              return (
+                <Image
+                  src={iconInfo.src}
+                  alt={iconInfo.alt}
+                  width={w}
+                  height={h}
+                  style={{ width: `${w}px`, height: `${h}px` }}
+                />
+              );
+            })() : (
               <div className="w-6 h-6 rounded-full bg-gray-400" />
             )}
           </a>

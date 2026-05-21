@@ -613,8 +613,10 @@ export default function TsurezureCard({
       </div>
       <div className="flex items-center justify-center gap-2">
         <select
+          name="sortOrder"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+          aria-label="並び替え"
           className="bg-transparent text-xs cursor-pointer appearance-none outline-none px-1"
           style={{ color: CURRENT_THEME.text, border: "none" }}
         >
