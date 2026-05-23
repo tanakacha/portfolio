@@ -413,10 +413,12 @@ export default function TsurezureCard({
 
   const sortedPosts = useMemo(() => {
     let base: Post[];
-    if (sortOrder === 'newest') {
-      base = [...posts].sort((a, b) => b.id - a.id);
-    } else if (sortOrder === 'oldest') {
-      base = [...posts].sort((a, b) => a.id - b.id);
+    if (sortOrder === 'newest' || sortOrder === 'oldest') {
+      // published_at (公開日時) を優先。NULL の場合は created_at にフォールバック
+      const tsOf = (p: Post) =>
+        new Date(p.publishedAt ?? p.createdAt).getTime();
+      const sign = sortOrder === 'newest' ? -1 : 1;
+      base = [...posts].sort((a, b) => sign * (tsOf(a) - tsOf(b)));
     } else {
       const shuffled = [...posts];
       for (let i = shuffled.length - 1; i > 0; i--) {

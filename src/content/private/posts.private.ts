@@ -7,6 +7,7 @@ type PostRow = {
   id: number;
   body: string;
   created_at: string;
+  published_at: string | null;
   next_post_id: number | null;
 };
 
@@ -20,8 +21,9 @@ export async function getPrivatePosts(): Promise<Post[]> {
   const supabase = getAdminSupabase();
   const { data: postsData, error: postsError } = await supabase
     .from("posts")
-    .select("id, body, created_at, next_post_id")
-    .order("created_at", { ascending: false });
+    .select("id, body, created_at, published_at, next_post_id")
+    .neq("visibility", "draft")
+    .order("published_at", { ascending: false });
   if (postsError) throw new Error(`getPrivatePosts: ${postsError.message}`);
   const posts = postsData as PostRow[];
   if (posts.length === 0) return [];
@@ -46,6 +48,7 @@ export async function getPrivatePosts(): Promise<Post[]> {
     id: p.id,
     body: p.body,
     createdAt: p.created_at,
+    publishedAt: p.published_at,
     reactions: reactionsByPost.get(p.id) ?? {},
     nextPostId: p.next_post_id,
   }));

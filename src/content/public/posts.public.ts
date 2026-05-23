@@ -7,6 +7,7 @@ type PostRow = {
   id: number;
   body: string;
   created_at: string;
+  published_at: string | null;
   next_post_id: number | null;
 };
 
@@ -20,9 +21,9 @@ export async function getPublicPosts(): Promise<Post[]> {
   const supabase = getPublicSupabase();
   const { data: postsData, error: postsError } = await supabase
     .from("posts")
-    .select("id, body, created_at, next_post_id")
+    .select("id, body, created_at, published_at, next_post_id")
     .eq("visibility", "public")
-    .order("created_at", { ascending: false });
+    .order("published_at", { ascending: false });
   if (postsError) throw new Error(`getPublicPosts: ${postsError.message}`);
   const posts = postsData as PostRow[];
   if (posts.length === 0) return [];
@@ -54,6 +55,7 @@ function mergePostsAndReactions(
     id: p.id,
     body: p.body,
     createdAt: p.created_at,
+    publishedAt: p.published_at,
     reactions: reactionsByPost.get(p.id) ?? {},
     nextPostId: p.next_post_id,
   }));

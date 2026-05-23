@@ -15,6 +15,7 @@ export async function getPrivateHistory(): Promise<HistoryItem[]> {
   const { data, error } = await supabase
     .from("history_items")
     .select("id, date, title, description, item_type")
+    .neq("visibility", "draft")
     .order("sort_order", { ascending: true });
   if (error) throw new Error(`getPrivateHistory: ${error.message}`);
   return (data as Row[]).map((r) => ({
