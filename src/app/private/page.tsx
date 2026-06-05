@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import PrivateHeroSection from "@/components/sections/PrivateHeroSection";
+import PrivateNewsSection from "@/components/sections/PrivateNewsSection";
 import PrivateHistorySection from "@/components/sections/PrivateHistorySection";
 import WorksSection from "@/components/sections/WorksSection";
 import { getPrivateProfile } from "@/content/private/profile.private";
@@ -19,6 +20,7 @@ export default async function PrivatePage() {
       <Header variant="private" isAuthed={true} title={profile.fullName} />
       <main style={{ paddingTop: "100px" }}>
         <PrivateHeroSection posts={posts} />
+        <PrivateNewsSection />
         <WorksSection works={works} />
         <PrivateHistorySection />
       </main>
