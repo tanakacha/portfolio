@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_TITLE = "Chisa - Apps & Things";
+const SITE_TITLE = "Chisa のサイト";
 const SITE_DESCRIPTION =
-  "Chisa Tanaka のポートフォリオ。編み物デザインアプリ「あみぬり」 など作ったプロダクトを紹介。";
+  "ポートフォリオ？サイト。いつも作りかけです。アイデア・ご意見募集中";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
