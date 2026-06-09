@@ -8,13 +8,14 @@ type Row = {
   body: string;
   link: string | null;
   image_url: string | null;
+  created_at: string;
 };
 
 export async function getPublicNews(): Promise<News[]> {
   const supabase = getPublicSupabase();
   const { data, error } = await supabase
     .from("news")
-    .select("id, date, body, link, image_url")
+    .select("id, date, body, link, image_url, created_at")
     .eq("visibility", "public")
     .order("date", { ascending: false })
     .order("sort_order", { ascending: false })
@@ -26,5 +27,6 @@ export async function getPublicNews(): Promise<News[]> {
     body: r.body,
     link: r.link,
     imageUrl: r.image_url,
+    createdAt: r.created_at,
   }));
 }

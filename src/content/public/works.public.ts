@@ -29,6 +29,7 @@ type Row = {
   images: string[];
   technologies: string[];
   links: Record<string, string> | null;
+  created_at: string;
   stories: StoryRow[] | null;
   details: DetailRow[] | null;
 };
@@ -38,7 +39,7 @@ export async function getPublicWorks(): Promise<Work[]> {
   const { data, error } = await supabase
     .from("works")
     .select(
-      `id, title, description, images, technologies, links,
+      `id, title, description, images, technologies, links, created_at,
        stories:work_stories(id, title, body, sort_order, display_style),
        details:work_details(id, label, value, sort_order, display_style)`,
     )
@@ -52,6 +53,7 @@ export async function getPublicWorks(): Promise<Work[]> {
     images: r.images,
     technologies: r.technologies,
     links: r.links ?? undefined,
+    createdAt: r.created_at,
     stories: (r.stories ?? [])
       .slice()
       .sort((a, b) => a.sort_order - b.sort_order)

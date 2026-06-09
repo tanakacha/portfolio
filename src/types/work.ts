@@ -36,4 +36,5 @@ export interface Work {
   };
   stories: WorkStory[];
   details: WorkDetail[];
+  createdAt: string; // ISO timestamp (NEW バッジ判定用)
 }

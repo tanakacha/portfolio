@@ -4,5 +4,5 @@ import NewsList from './NewsList';
 export default async function NewsSection() {
   const news = await getPublicNews();
   if (news.length === 0) return null;
-  return <NewsList news={news} />;
+  return <NewsList news={news} storageKey="news:lastSeenAt" />;
 }

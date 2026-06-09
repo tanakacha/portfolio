@@ -22,6 +22,7 @@ const SWIPE_THRESHOLD_PX = 50;
 
 interface Props {
   work: Work;
+  isNew?: boolean;
 }
 
 function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
@@ -46,7 +47,7 @@ function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
   );
 }
 
-export default function WorkCard({ work }: Props) {
+export default function WorkCard({ work, isNew = false }: Props) {
   const images = work.images ?? [];
   const links = Object.entries(work.links ?? {})
     .filter(([, url]) => !!url)
@@ -314,12 +315,23 @@ export default function WorkCard({ work }: Props) {
   return (
     <div
       ref={cardRef}
-      className="flex flex-col md:flex-row items-center border-2 rounded-lg p-6 shadow"
+      className="relative flex flex-col md:flex-row items-center border-2 rounded-lg p-6 shadow"
       style={{
         borderColor: CURRENT_THEME.border,
         backgroundColor: CURRENT_THEME.background,
       }}
     >
+      {isNew && (
+        <span
+          className="absolute top-3 right-3 text-xs font-bold px-2 py-1 rounded z-20"
+          style={{
+            backgroundColor: CURRENT_THEME.accent,
+            color: CURRENT_THEME.text,
+          }}
+        >
+          NEW
+        </span>
+      )}
       <div className="w-full md:w-1/2 flex flex-col md:justify-start md:items-start md:self-start">
         <h3
           className="text-lg font-semibold mb-2 order-1"

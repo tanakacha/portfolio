@@ -1,8 +1,17 @@
+'use client';
+
 import { CURRENT_THEME } from '@/lib/constants';
 import { Work } from '@/types/work';
+import { useLastSeen } from '@/lib/use-last-seen';
 import WorkCard from './WorkCard';
 
 export default function WorksSection({ works }: { works: Work[] }) {
+  const latestCreatedAt = works.reduce<string | undefined>(
+    (acc, w) => (acc && acc > w.createdAt ? acc : w.createdAt),
+    undefined,
+  );
+  const { isNew } = useLastSeen('works:lastSeenAt', latestCreatedAt);
+
   return (
     <section
       id="works"
@@ -18,7 +27,11 @@ export default function WorksSection({ works }: { works: Work[] }) {
         </h2>
         <div className="flex flex-col gap-8">
           {works.map((work) => (
-            <WorkCard key={work.id} work={work} />
+            <WorkCard
+              key={work.id}
+              work={work}
+              isNew={isNew(work.createdAt)}
+            />
           ))}
         </div>
       </div>
