@@ -41,7 +41,7 @@ export default async function HeroSection({ posts }: Props) {
                   priority
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  className="w-full h-full object-cover"
+                  className="w-[90%] h-[90%] object-contain"
                 />
               ) : (
                 <span
