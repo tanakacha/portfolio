@@ -33,7 +33,7 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="text-sm transition-colors"
+            className="text-sm transition-colors min-w-[4.5rem] text-center"
             style={{ color: CURRENT_THEME.textSecondary }}
           >
             ← Public
@@ -41,8 +41,8 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
           <form action="/api/auth/logout" method="POST">
             <button
               type="submit"
-              className="text-sm border rounded px-3 py-1 transition-opacity hover:opacity-80"
-              style={{ borderColor: CURRENT_THEME.border, color: CURRENT_THEME.text }}
+              className="text-sm transition-colors"
+              style={{ color: CURRENT_THEME.textSecondary }}
             >
               Logout
             </button>
@@ -55,7 +55,7 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
         <div className="flex items-center gap-4">
           <Link
             href="/private"
-            className="text-sm transition-colors"
+            className="text-sm transition-colors min-w-[4.5rem] text-center"
             style={{ color: CURRENT_THEME.text }}
           >
             Private →
@@ -75,7 +75,7 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
     return (
       <Link
         href="/login"
-        className="text-sm transition-colors"
+        className="text-sm transition-colors min-w-[4.5rem] text-center"
         style={{ color: CURRENT_THEME.textSecondary }}
       >
         Private →
