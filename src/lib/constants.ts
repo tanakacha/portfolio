@@ -40,7 +40,8 @@ export const SITE_URL = "https://portfolio-pearl-five-82.vercel.app";
 
 // ナビゲーションアイテム
 export const NAVIGATION_ITEMS = [
-  { id: "top", label: "Top", href: "#top" },
-  { id: "works", label: "Works", href: "#works" },
-  { id: "history", label: "History", href: "#history" }
+  { id: "top",     label: "Top",     href: "#top",     privateOnly: false },
+  { id: "works",   label: "Works",   href: "#works",   privateOnly: false },
+  { id: "ideas",   label: "Ideas",   href: "#ideas",   privateOnly: true  },
+  { id: "history", label: "History", href: "#history", privateOnly: false },
 ] as const;

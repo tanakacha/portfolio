@@ -29,6 +29,13 @@ export default function WelcomeModal({ isAuthed }: WelcomeModalProps) {
     setVisible(true);
   }, [isAuthed]);
 
+  // Ideas ナビクリックで強制表示（既読済みでも開く）
+  useEffect(() => {
+    const handler = () => setVisible(true);
+    window.addEventListener('show-login-modal', handler);
+    return () => window.removeEventListener('show-login-modal', handler);
+  }, []);
+
   useEffect(() => {
     if (!visible) return;
     const handleKey = (e: KeyboardEvent) => {

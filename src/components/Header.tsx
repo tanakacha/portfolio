@@ -16,7 +16,11 @@ interface HeaderProps {
 export default function Header({ variant = 'public', isAuthed = false, title }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (href: string, privateOnly: boolean) => {
+    if (privateOnly && variant === 'public') {
+      window.dispatchEvent(new CustomEvent('show-login-modal'));
+      return;
+    }
     if (href === '#top') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -98,22 +102,30 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
           </div>
           <div className="flex items-center gap-8">
             <ul className="hidden md:flex space-x-8">
-              {NAVIGATION_ITEMS.map((item) => (
-                <li
-                  key={item.id}
-                  className="font-medium cursor-pointer transition-colors"
-                  style={{ color: CURRENT_THEME.text }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = CURRENT_THEME.textSecondary;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = CURRENT_THEME.text;
-                  }}
-                  onClick={() => handleNavClick(item.href)}
-                >
-                  {item.label}
-                </li>
-              ))}
+              {NAVIGATION_ITEMS.map((item) => {
+                const isDimmed = item.privateOnly && variant === 'public';
+                return (
+                  <li
+                    key={item.id}
+                    className="font-medium cursor-pointer transition-opacity"
+                    style={{
+                      color: isDimmed ? CURRENT_THEME.textSecondary : CURRENT_THEME.text,
+                      opacity: isDimmed ? 0.45 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = isDimmed ? '0.7' : '1';
+                      if (!isDimmed) e.currentTarget.style.color = CURRENT_THEME.textSecondary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = isDimmed ? '0.45' : '1';
+                      if (!isDimmed) e.currentTarget.style.color = CURRENT_THEME.text;
+                    }}
+                    onClick={() => handleNavClick(item.href, item.privateOnly)}
+                  >
+                    {item.label}
+                  </li>
+                );
+              })}
             </ul>
             <div className="hidden md:flex items-center gap-3">
               <ThemeSwitcher />
@@ -154,21 +166,27 @@ export default function Header({ variant = 'public', isAuthed = false, title }: 
         </div>
 
         <div className="flex flex-col items-center justify-center h-full space-y-8 -mt-16">
-          {NAVIGATION_ITEMS.map((item) => (
-            <a
-              key={item.id}
-              href={item.href}
-              className="text-2xl font-medium transition-colors"
-              style={{ color: CURRENT_THEME.text }}
-              onClick={(e) => {
-                e.preventDefault();
-                setIsOpen(false);
-                handleNavClick(item.href);
-              }}
-            >
-              {item.label}
-            </a>
-          ))}
+          {NAVIGATION_ITEMS.map((item) => {
+            const isDimmed = item.privateOnly && variant === 'public';
+            return (
+              <a
+                key={item.id}
+                href={item.href}
+                className="text-2xl font-medium"
+                style={{
+                  color: isDimmed ? CURRENT_THEME.textSecondary : CURRENT_THEME.text,
+                  opacity: isDimmed ? 0.45 : 1,
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  handleNavClick(item.href, item.privateOnly);
+                }}
+              >
+                {item.label}
+              </a>
+            );
+          })}
           <div className="mt-8">
             <AuthAction />
           </div>
