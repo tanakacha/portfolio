@@ -91,6 +91,18 @@ body {
   transform-origin: center;
 }
 
+/* Ideas: 目録カードのめくり (次へ/前へで方向を変える) */
+@keyframes idea-deal-next {
+  0% { transform: translateX(16%) rotate(2.5deg); opacity: 0; }
+  100% { transform: translateX(0) rotate(0); opacity: 1; }
+}
+@keyframes idea-deal-prev {
+  0% { transform: translateX(-16%) rotate(-2.5deg); opacity: 0; }
+  100% { transform: translateX(0) rotate(0); opacity: 1; }
+}
+.idea-deal-next { animation: idea-deal-next 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.idea-deal-prev { animation: idea-deal-prev 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+
 /* 和紙風テクスチャ: SVG ノイズ (feTurbulence) + 控えめなグラデで紙の不均一感 */
 .washi-texture {
   background-image:
