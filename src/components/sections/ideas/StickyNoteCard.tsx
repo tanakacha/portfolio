@@ -13,6 +13,66 @@ function fmtDate(at: string): string {
   return m && d ? `${Number(m)}/${Number(d)}` : at;
 }
 
+// label / name / url / maker を持つリンク項目（exists の existings / partial の refs 共通）
+interface LinkItem {
+  label?: string;
+  name?: string;
+  url?: string;
+  maker?: string;
+}
+
+// 同じ label の項目をまとめる（label の登場順を維持。label 無しは '' で1グループ）
+function groupByLabel(items: LinkItem[]): { label: string; items: LinkItem[] }[] {
+  const groups: { label: string; items: LinkItem[] }[] = [];
+  for (const item of items) {
+    const key = item.label ?? '';
+    const found = groups.find((g) => g.label === key);
+    if (found) found.items.push(item);
+    else groups.push({ label: key, items: [item] });
+  }
+  return groups;
+}
+
+// グルーピングされたリンク一覧（exists / partial 共通表示）
+function LinkGroupList({ items }: { items: LinkItem[] }) {
+  return (
+    <div
+      className="mt-3 pt-3 text-xs space-y-2"
+      style={{ borderTop: '1px solid rgba(25, 33, 56, 0.12)' }}
+    >
+      {groupByLabel(items).map((group, gi) => (
+        <div key={gi}>
+          {group.label && (
+            <span style={{ color: CURRENT_THEME.textSecondary }}>{group.label}:</span>
+          )}
+          <ul className={group.label ? 'mt-0.5 space-y-0.5' : 'space-y-0.5'}>
+            {group.items.map((item, ii) => (
+              <li key={ii} className="pl-3" style={{ color: CURRENT_THEME.text }}>
+                ・
+                {item.url ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:opacity-70"
+                  >
+                    {item.name ?? item.url}
+                  </a>
+                ) : (
+                  <span>{item.name}</span>
+                )}
+                {item.maker && (
+                  <span style={{ color: CURRENT_THEME.textSecondary }}> （{item.maker}）</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BranchCard({ b, i }: { b: IdeaBranch; i: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isPortrait, setIsPortrait] = useState(false);
@@ -58,7 +118,7 @@ function DevelopBlock({ idea }: { idea: Idea }) {
   return (
     <div className="mt-3">
       {branches.length > 0 && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 items-start">
           {branches.map((b, i) => (
             <BranchCard key={i} b={b} i={i} />
           ))}
@@ -166,7 +226,7 @@ export default function StickyNoteCard({
 
       {isReserved ? (
         <p className="text-sm" style={{ color: CURRENT_THEME.textSecondary }}>
-          詳細は一時非公開中です。
+          {idea.note ?? '詳細は一時非公開中です。'}
         </p>
       ) : (
         <>
@@ -181,63 +241,15 @@ export default function StickyNoteCard({
             </p>
           )}
 
+          {develop && <DevelopBlock idea={idea} />}
+
           {status === 'exists' && idea.existings && idea.existings.length > 0 && (
-            <div
-              className="mt-3 pt-3 text-xs space-y-1"
-              style={{ borderTop: '1px solid rgba(25, 33, 56, 0.12)' }}
-            >
-              {idea.existings.map((p, pi) => (
-                <p key={pi} style={{ color: CURRENT_THEME.text }}>
-                  {p.label && (
-                    <span style={{ color: CURRENT_THEME.textSecondary }}>{p.label}: </span>
-                  )}
-                  {p.url ? (
-                    <a
-                      href={p.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:opacity-70"
-                    >
-                      {p.name}
-                    </a>
-                  ) : (
-                    <span>{p.name}</span>
-                  )}
-                  {p.maker && (
-                    <span style={{ color: CURRENT_THEME.textSecondary }}> （{p.maker}）</span>
-                  )}
-                </p>
-              ))}
-            </div>
+            <LinkGroupList items={idea.existings} />
           )}
 
           {status === 'partial' && idea.refs && idea.refs.length > 0 && (
-            <div
-              className="mt-3 pt-3 text-xs space-y-1"
-              style={{ borderTop: '1px solid rgba(25, 33, 56, 0.12)' }}
-            >
-              {idea.refs.map((ref, ri) => (
-                <p key={ri} style={{ color: CURRENT_THEME.text }}>
-                  {ref.label}
-                  {' → '}
-                  {ref.url ? (
-                    <a
-                      href={ref.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:opacity-70"
-                    >
-                      {ref.name ?? ref.url}
-                    </a>
-                  ) : (
-                    <span>{ref.name}</span>
-                  )}
-                </p>
-              ))}
-            </div>
+            <LinkGroupList items={idea.refs} />
           )}
-
-          {develop && <DevelopBlock idea={idea} />}
         </>
       )}
     </div>
