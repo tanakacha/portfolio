@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, type ComponentType } from 'react';
+import { useState, useEffect, useMemo, useRef, type ComponentType } from 'react';
 import { Heart } from 'lucide-react';
 import { Post } from '@/types/post';
 import { CURRENT_THEME } from '@/lib/constants';
@@ -123,13 +123,25 @@ const ICON_BY_KEY: Record<ReactionKey, ComponentType<IconProps>> = {
   eyes: EyesIcon,
 };
 
-type SortOrder = 'random' | 'newest' | 'oldest';
+type SortOrder = 'unread' | 'random' | 'newest' | 'oldest';
 type ReactedMap = Record<number, ReactionKey[]>;
 
 const STORAGE_KEY = 'tsurezure:lastSeenPostId';
 const REACTIONS_STORAGE_KEY = 'tsurezure:reactedKeys';
 const LEGACY_LIKES_STORAGE_KEY = 'tsurezure:likedPostIds';
+// フリップして裏を見たカードの id 集合（public/private 共通）。未読順ソートに使う
+const READ_IDS_STORAGE_KEY = 'tsurezure:readPostIds';
 const FLIP_DURATION_MS = 800;
+
+// Fisher-Yates シャッフル（新しい配列を返す）
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 interface Props {
   posts: Post[];
@@ -355,6 +367,9 @@ export default function TsurezureCard({
   const reactionDefs = variant === 'private' ? ALL_REACTIONS : PUBLIC_REACTIONS;
   const [sortOrder, setSortOrder] = useState<SortOrder>('random');
   const [lastSeenId, setLastSeenId] = useState<number | null>(null);
+  // 既読 id 集合。未読順ソートが読み込み時の状態で固定されるよう ref で保持
+  // （セッション中のフリップで増えても並びは再計算されない。UI 表示はないので state 不要）
+  const readIdsRef = useRef<Set<number>>(new Set());
   const [isMounted, setIsMounted] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [frontIndex, setFrontIndex] = useState(0);
@@ -378,6 +393,19 @@ export default function TsurezureCard({
     setIsMounted(true);
     const stored = localStorage.getItem(STORAGE_KEY);
     setLastSeenId(stored ? Number(stored) : null);
+
+    // 既読 id 集合をロード。1件でもあれば「2回目以降」とみなし未読順をデフォルトに
+    try {
+      const storedRead = localStorage.getItem(READ_IDS_STORAGE_KEY);
+      if (storedRead) {
+        const arr = JSON.parse(storedRead) as number[];
+        const set = new Set(arr);
+        readIdsRef.current = set;
+        if (set.size > 0) setSortOrder('unread');
+      }
+    } catch {
+      // ignore
+    }
 
     const storedReactions = localStorage.getItem(REACTIONS_STORAGE_KEY);
     if (storedReactions) {
@@ -412,52 +440,55 @@ export default function TsurezureCard({
   }, [posts]);
 
   const sortedPosts = useMemo(() => {
-    let base: Post[];
-    if (sortOrder === 'newest' || sortOrder === 'oldest') {
-      // published_at (公開日時) を優先。NULL の場合は created_at にフォールバック
-      const tsOf = (p: Post) =>
-        new Date(p.publishedAt ?? p.createdAt).getTime();
-      const sign = sortOrder === 'newest' ? -1 : 1;
-      base = [...posts].sort((a, b) => sign * (tsOf(a) - tsOf(b)));
-    } else {
-      const shuffled = [...posts];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      base = shuffled;
-    }
-
-    // ペア制約: A.nextPostId = B.id なら A の直後に B を挿入
+    // 1. ペア制約でチェーン化（A.nextPostId = B.id なら A→B を1つの塊に）
     const childIds = new Set(
       posts.filter((p) => p.nextPostId != null).map((p) => p.nextPostId!),
     );
     const byId = new Map(posts.map((p) => [p.id, p]));
     const visited = new Set<number>();
-    const result: Post[] = [];
+    const chains: Post[][] = [];
 
-    const appendChain = (start: Post) => {
+    const buildChain = (start: Post) => {
       if (visited.has(start.id)) return;
-      visited.add(start.id);
-      result.push(start);
-      let nextId = start.nextPostId;
-      while (nextId != null && !visited.has(nextId)) {
-        const child = byId.get(nextId);
-        if (!child) break;
-        visited.add(child.id);
-        result.push(child);
-        nextId = child.nextPostId;
+      const chain: Post[] = [];
+      let cur: Post | undefined = start;
+      while (cur && !visited.has(cur.id)) {
+        visited.add(cur.id);
+        chain.push(cur);
+        cur = cur.nextPostId != null ? byId.get(cur.nextPostId) : undefined;
       }
+      chains.push(chain);
     };
 
-    for (const p of base) {
-      if (childIds.has(p.id)) continue;
-      appendChain(p);
+    // ルート（誰の子でもない）から先に。残り（循環・孤立）も拾う
+    for (const p of posts) if (!childIds.has(p.id)) buildChain(p);
+    for (const p of posts) if (!visited.has(p.id)) buildChain(p);
+
+    // 2. チェーン単位で並び順を決定
+    const tsOfChain = (chain: Post[]) =>
+      Math.max(
+        ...chain.map((p) => new Date(p.publishedAt ?? p.createdAt).getTime()),
+      );
+
+    let ordered: Post[][];
+    if (sortOrder === 'newest' || sortOrder === 'oldest') {
+      const sign = sortOrder === 'newest' ? -1 : 1;
+      ordered = [...chains].sort((a, b) => sign * (tsOfChain(a) - tsOfChain(b)));
+    } else if (sortOrder === 'unread') {
+      // 読み込み時の既読状態（ref スナップショット）で未読/既読に分ける。
+      // セット内のどれか1つでも未読ならチェーンごと未読扱い。各グループ内はランダム。
+      const read = readIdsRef.current;
+      const isUnread = (chain: Post[]) => chain.some((p) => !read.has(p.id));
+      ordered = [
+        ...shuffle(chains.filter(isUnread)),
+        ...shuffle(chains.filter((c) => !isUnread(c))),
+      ];
+    } else {
+      // random
+      ordered = shuffle(chains);
     }
-    for (const p of base) {
-      if (!visited.has(p.id)) result.push(p);
-    }
-    return result;
+
+    return ordered.flat();
   }, [posts, sortOrder]);
 
   useEffect(() => {
@@ -465,6 +496,19 @@ export default function TsurezureCard({
     setFrontIndex(0);
     setBackIndex(null);
   }, [sortOrder]);
+
+  // 表示中（フリップして見えている）のカードを既読にする
+  const markRead = (id: number) => {
+    if (readIdsRef.current.has(id)) return;
+    const next = new Set(readIdsRef.current);
+    next.add(id);
+    readIdsRef.current = next;
+    try {
+      localStorage.setItem(READ_IDS_STORAGE_KEY, JSON.stringify([...next]));
+    } catch {
+      // ignore
+    }
+  };
 
   if (posts.length === 0) return null;
 
@@ -502,6 +546,9 @@ export default function TsurezureCard({
     const delta = direction === 'forward' ? 1 : -1;
     const newIdx =
       (visibleIndex + delta + sortedPosts.length) % sortedPosts.length;
+    // 直前まで見ていたカード（フリップ元）を既読にする
+    const left = sortedPosts[visibleIndex];
+    if (left) markRead(left.id);
     if (isFrontVisible) {
       setBackIndex(newIdx);
     } else {
@@ -624,6 +671,7 @@ export default function TsurezureCard({
           className="bg-transparent text-xs cursor-pointer appearance-none outline-none px-1"
           style={{ color: CURRENT_THEME.text, border: "none" }}
         >
+          <option value="unread">未読順</option>
           <option value="random">ランダム</option>
           <option value="newest">新しい順</option>
           <option value="oldest">古い順</option>
