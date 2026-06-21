@@ -47,6 +47,11 @@ export default function SpotlightVariant({ ideas }: { ideas: Idea[] }) {
   const [animate, setAnimate] = useState(true);
   const [showTapZones, setShowTapZones] = useState(false);
 
+  // No. ストリップが1行に収まるか（収まらなければモバイル向けウィンドウ表示）
+  const stripContainerRef = useRef<HTMLDivElement>(null);
+  const stripMeasureRef = useRef<HTMLDivElement>(null);
+  const [compact, setCompact] = useState(false);
+
   const realIndex = pad > 0 ? (((active - pad) % n) + n) % n : active;
   const realOf = (j: number) => (pad > 0 ? (((j - pad) % n) + n) % n : j);
 
@@ -74,6 +79,18 @@ export default function SpotlightVariant({ ideas }: { ideas: Idea[] }) {
     ro.observe(vp);
     return () => ro.disconnect();
   }, [recenter]);
+
+  useEffect(() => {
+    const container = stripContainerRef.current;
+    const measure = stripMeasureRef.current;
+    if (!container || !measure) return;
+    // 全番号がコンテナ幅の80%以上を占めるならコンパクト表示に切り替える
+    const check = () => setCompact(measure.scrollWidth > container.clientWidth * 0.8);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [n]);
 
   useEffect(() => {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
@@ -111,6 +128,70 @@ export default function SpotlightVariant({ ideas }: { ideas: Idea[] }) {
   if (n === 0) return null;
 
   const transition = ready && animate ? `${DURATION_MS}ms ${EASING}` : 'none';
+
+  // モバイル用ウィンドウ（現在地±2 の最大5個。端では寄せる）
+  const WINDOW = 5;
+  const windowStart = Math.max(0, Math.min(realIndex - 2, Math.max(0, n - WINDOW)));
+  const windowEnd = Math.min(n, windowStart + WINDOW);
+  const windowIndices: number[] = [];
+  for (let i = windowStart; i < windowEnd; i++) windowIndices.push(i);
+
+  // real index d を、ループ上で現在地 active に最も近い ext 上の位置に変換
+  // （末尾から先頭など、ぐるっと繋がっている側へ最短で移動する）
+  const nearestActive = (d: number) => {
+    const candidates =
+      pad > 0
+        ? [pad + d - n, pad + d, pad + d + n].filter((c) => c >= 0 && c < ext.length)
+        : [d];
+    return candidates.reduce((best, c) =>
+      Math.abs(c - active) < Math.abs(best - active) ? c : best
+    );
+  };
+
+  const NumBtn = ({ no, active, onClick }: { no: number; active: boolean; onClick: () => void }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`No.${String(no).padStart(3, '0')} へ`}
+      className="font-mono text-[0.6rem] px-1.5 py-0.5 rounded transition-colors"
+      style={{
+        backgroundColor: active ? CURRENT_THEME.border : 'transparent',
+        color: active ? CURRENT_THEME.background : CURRENT_THEME.textSecondary,
+        border: `1px solid ${CURRENT_THEME.border}`,
+        opacity: active ? 1 : 0.6,
+      }}
+    >
+      {String(no).padStart(3, '0')}
+    </button>
+  );
+
+  const ArrowBtn = ({
+    label,
+    disabled,
+    onClick,
+    children,
+  }: {
+    label: string;
+    disabled: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="font-mono text-[0.6rem] px-1.5 py-0.5 rounded transition-opacity"
+      style={{
+        color: CURRENT_THEME.textSecondary,
+        border: `1px solid ${CURRENT_THEME.border}`,
+        opacity: disabled ? 0.25 : 0.6,
+        cursor: disabled ? 'default' : 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  );
 
   return (
     <div>
@@ -195,24 +276,47 @@ export default function SpotlightVariant({ ideas }: { ideas: Idea[] }) {
         </span>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-1.5 mt-3">
-        {ideas.map((idea, i) => (
-          <button
-            key={idea.id}
-            type="button"
-            onClick={() => moveTo(pad + i)}
-            aria-label={`No.${String(idea.no).padStart(3, '0')} へ`}
-            className="font-mono text-[0.6rem] px-1.5 py-0.5 rounded transition-colors"
-            style={{
-              backgroundColor: i === realIndex ? CURRENT_THEME.border : 'transparent',
-              color: i === realIndex ? CURRENT_THEME.background : CURRENT_THEME.textSecondary,
-              border: `1px solid ${CURRENT_THEME.border}`,
-              opacity: i === realIndex ? 1 : 0.6,
-            }}
-          >
-            {String(idea.no).padStart(3, '0')}
-          </button>
-        ))}
+      <div ref={stripContainerRef} className="relative mt-3">
+        {/* 計測用（常に全番号を1行で持ち、自然幅を測る。非表示） */}
+        <div
+          ref={stripMeasureRef}
+          aria-hidden
+          className="absolute left-0 top-0 flex flex-nowrap gap-1.5 opacity-0 pointer-events-none"
+        >
+          {ideas.map((idea) => (
+            <span key={idea.id} className="font-mono text-[0.6rem] px-1.5 py-0.5 border whitespace-nowrap">
+              {String(idea.no).padStart(3, '0')}
+            </span>
+          ))}
+        </div>
+
+        {compact ? (
+          // モバイル: |< < [現在地±2] > >|
+          <div className="flex items-center justify-center gap-1.5">
+            <ArrowBtn label="先頭へ" disabled={realIndex === 0} onClick={() => moveTo(nearestActive(0))}>
+              |&lt;
+            </ArrowBtn>
+            <ArrowBtn label="5個前へ" disabled={realIndex === 0} onClick={() => moveTo(pad + Math.max(0, realIndex - 5))}>
+              &lt;5
+            </ArrowBtn>
+            {windowIndices.map((i) => (
+              <NumBtn key={ideas[i].id} no={ideas[i].no} active={i === realIndex} onClick={() => moveTo(pad + i)} />
+            ))}
+            <ArrowBtn label="5個先へ" disabled={realIndex === n - 1} onClick={() => moveTo(pad + Math.min(n - 1, realIndex + 5))}>
+              5&gt;
+            </ArrowBtn>
+            <ArrowBtn label="末尾へ" disabled={realIndex === n - 1} onClick={() => moveTo(nearestActive(n - 1))}>
+              &gt;|
+            </ArrowBtn>
+          </div>
+        ) : (
+          // PC: 全番号を1行表示
+          <div className="flex flex-nowrap justify-center gap-1.5">
+            {ideas.map((idea, i) => (
+              <NumBtn key={idea.id} no={idea.no} active={i === realIndex} onClick={() => moveTo(pad + i)} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
